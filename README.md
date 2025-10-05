@@ -8,21 +8,25 @@
 
 ## 2. 应用截图
 
-| 主界面 | 跑步过程 | 结果页 | 成就解锁 |
-| :---: | :---: | :---: | :---: |
-| <img src="./screenshots/main_ui.jpg" width="200"/> | <img src="./screenshots/running_ui.jpg" width="200"/> | <img src="./screenshots/result_ui.jpg" width="200"/> | <img src="./screenshots/achievement_ui.jpg" width="200"/> |
+| 主界面 | 跑步过程 | 结果页 |
+| :---: | :---: | :---: |
+| <img src="./screenshots/main_ui.jpg" width="200"/> | <img src="./screenshots/running_ui.jpg" width="200"/> | <img src="./screenshots/result_ui.jpg" width="200"/> |
+| **成就解锁** | **历史列表** | **跑步详情** |
+| <img src="./screenshots/achievement_ui.jpg" width="200"/> | <img src="./screenshots/history_ui.jpg" width="200"/> | <img src="./screenshots/detail_ui.jpg" width="200"/> |
 
 ## 3. 主要功能
 
-以下是项目当前已实现及规划中的功能。
+以下是项目当前已实现的功能。
 
 -  **核心跑步功能**
     -  **实时定位**: 在地图上展示用户当前位置。
     -  **过程控制**: 实现跑步的 `开始` / `暂停` / `继续` / `结束` 逻辑。
     -  **实时轨迹绘制**: 在地图上实时描绘用户的运动路径。
     -  **实时数据展示**: 跑步过程中实时显示运动时长、距离等。
--  **数据统计**
+-  **数据统计与历史**
     -  **单次总结**: 跑步结束后，展示总距离、总时长、平均配速等关键数据。
+    -  **历史记录**: 保存每一次的跑步数据，并提供列表页面供用户回顾。
+    -  **详情回顾**: 用户可以查看任意一次跑步的详细数据，包括运动轨迹地图。
 -  **成就系统**
     -  **成就解锁**: 根据跑步数据（例如：首次完成跑步、达到特定距离等）解锁相应成就。
 
@@ -32,7 +36,10 @@
 | 类别 | 技术/库 | 用途 |
 | :--- | :--- | :--- |
 | **核心框架** | Flutter (Dart) | 跨平台应用开发 |
-| **地图与定位** | [高德地图开放平台](https://lbs.amap.com/) | 提供地图和定位服务 |
+| **地图与定位** | [flutter_map](https://pub.dev/packages/flutter_map) | 在应用内集成 OpenStreetMap 地图 |
+| | [geolocator](https://pub.dev/packages/geolocator) | 获取设备GPS定位 |
+| **本地存储** | [shared_preferences](https://pub.dev/packages/shared_preferences) | 轻量级数据持久化，用于保存跑步历史和成就 |
+| **工具库** | [intl](https://pub.dev/packages/intl) | 提供国际化和日期/数字格式化功能 |
 
 
 ## 5. 项目结构
@@ -41,16 +48,14 @@
 
 ```
 lib/
-├── main.dart           # 应用主入口
-├── api/                # API 调用，例如地图服务封装
-├── models/             # 数据模型 (例如: User, RunRecord)
-├── views/              # 视图层 (UI页面)
-│   ├── home_page.dart
-│   ├── running_page.dart
-│   └── ...
-├── view_models/        # 视图模型或状态管理逻辑 (ViewModels/BLoCs/Providers)
-├── widgets/            # 可复用的UI组件 (例如: 自定义按钮、信息卡片)
-└── utils/              # 工具类 (例如: 格式化工具、常量定义)
+├── main.dart               # 应用主入口及主页面
+├── models/                 # 数据模型 (run_session.dart)
+├── screens/                # 各个独立的页面 (history_page.dart, run_detail_page.dart)
+├── services/               # 后端服务封装 (history_service.dart)
+├── widgets/                # 可复用的UI组件 (history_list_item.dart)
+├── achievement_system.dart # 成就系统逻辑
+├── result_page.dart        # 结果页面
+└── utils.dart              # 工具类
 ```
 
 ## 6. 快速开始
@@ -118,7 +123,6 @@ flutter build apk --release
 在当前版本的基础上，项目仍有许多可扩展的方向：
 
 - AI计划：分析你的身体条件，连接大模型分析，帮助你设计适合你的跑步计划（公里数，配速，消耗卡路里等等）。
-- 历史记录：增加跑步历史列表，允许用户查看和回顾每一次的运动详情。
 - 数据可视化：引入图表库，对历史数据进行可视化分析。
 - 数据保存：支持用户注册登录，实现数据云端同步。
 - 语音播报：每跑完1公里，播报该公里的配速和消耗的卡路里，在完成相应的目标后进行语音播报。

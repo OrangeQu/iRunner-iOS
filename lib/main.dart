@@ -6,6 +6,11 @@ import 'package:irunner_ios/achievement_system.dart';
 import 'package:irunner_ios/result_page.dart';
 import 'package:irunner_ios/utils.dart';
 import 'package:latlong2/latlong.dart';
+import 'dart:math';
+
+import 'models/run_session.dart';
+import 'screens/history_page.dart';
+import 'services/history_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -46,6 +51,7 @@ class _MapPageState extends State<MapPage> {
   int _durationInSeconds = 0;
   double _distanceInMeters = 0.0;
   final AchievementManager _achievementManager = AchievementManager();
+  final HistoryService _historyService = HistoryService();
 
   @override
   void initState() {
@@ -67,6 +73,19 @@ class _MapPageState extends State<MapPage> {
       // 结束跑步
       _positionStreamSubscription?.cancel();
       _timer?.cancel();
+
+      // Create RunSession
+      final runSession = RunSession(
+        id: DateTime.now().toIso8601String(), // Using timestamp as a simple unique ID
+        date: DateTime.now(),
+        distanceInMeters: _distanceInMeters,
+        durationInSeconds: _durationInSeconds,
+        route: _trace.map((latLng) => Coordinate(latitude: latLng.latitude, longitude: latLng.longitude)).toList(),
+      );
+
+      // Save the run session
+      await _historyService.saveRun(runSession);
+
       setState(() {
         _isRunning = false;
       });
@@ -213,6 +232,17 @@ class _MapPageState extends State<MapPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('iRunner - 跑步'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HistoryPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
