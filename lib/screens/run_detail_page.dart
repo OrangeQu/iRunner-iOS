@@ -4,10 +4,40 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/run_session.dart';
 
-class RunDetailPage extends StatelessWidget {
+class RunDetailPage extends StatefulWidget {
   final RunSession run;
 
   const RunDetailPage({Key? key, required this.run}) : super(key: key);
+
+  @override
+  State<RunDetailPage> createState() => _RunDetailPageState();
+}
+
+class _RunDetailPageState extends State<RunDetailPage> {
+  final MapController _mapController = MapController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final polylinePoints = widget.run.route.map((c) => LatLng(c.latitude, c.longitude)).toList();
+      if (polylinePoints.isNotEmpty) {
+        final bounds = LatLngBounds.fromPoints(polylinePoints);
+        _mapController.fitCamera(
+          CameraFit.bounds(
+            bounds: bounds,
+            padding: const EdgeInsets.all(50.0),
+          ),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
 
   String _formatDuration(Duration d) {
     final parts = <String>[];
@@ -26,11 +56,11 @@ class RunDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final polylinePoints = run.route.map((c) => LatLng(c.latitude, c.longitude)).toList();
+    final polylinePoints = widget.run.route.map((c) => LatLng(c.latitude, c.longitude)).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(DateFormat('yyyy-MM-dd').format(run.date.toLocal())),
+        title: Text(DateFormat('yyyy-MM-dd').format(widget.run.date.toLocal())),
         centerTitle: true,
       ),
       body: Column(
@@ -38,14 +68,15 @@ class RunDetailPage extends StatelessWidget {
           Expanded(
             flex: 2,
             child: FlutterMap(
+              mapController: _mapController,
               options: MapOptions(
-                initialCenter: polylinePoints.isNotEmpty ? polylinePoints.first : LatLng(0, 0),
+                initialCenter: polylinePoints.isNotEmpty ? polylinePoints.first : const LatLng(0, 0),
                 initialZoom: 15.0,
               ),
               children: [
                 TileLayer(
-                  urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  subdomains: ['a', 'b', 'c'],
+                  urlTemplate: "https://wprd0{s}.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z}",
+                  subdomains: const ['1', '2', '3', '4'],
                 ),
                 PolylineLayer(
                   polylines: [
@@ -65,14 +96,14 @@ class RunDetailPage extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: GridView.count(
                 crossAxisCount: 2,
-                childAspectRatio: 3,
+                childAspectRatio: 2.2,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
                 children: [
-                  _buildStatCard('距离', '${(run.distanceInMeters / 1000).toStringAsFixed(2)} km'),
-                  _buildStatCard('时长', _formatDuration(run.duration)),
-                  _buildStatCard('配速', _formatPace(run.paceInSecondsPerKm)),
-                  _buildStatCard('日期', DateFormat('yyyy/MM/dd HH:mm').format(run.date.toLocal())),
+                  _buildStatCard('距离', '${(widget.run.distanceInMeters / 1000).toStringAsFixed(2)} km'),
+                  _buildStatCard('时长', _formatDuration(widget.run.duration)),
+                  _buildStatCard('配速', _formatPace(widget.run.paceInSecondsPerKm)),
+                  _buildStatCard('日期', DateFormat('yyyy/MM/dd\nHH:mm').format(widget.run.date.toLocal())),
                 ],
               ),
             ),
@@ -91,7 +122,11 @@ class RunDetailPage extends StatelessWidget {
           children: [
             Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
             const SizedBox(height: 4),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
       ),
